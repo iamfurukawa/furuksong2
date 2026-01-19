@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import HealthCheckController from '../controllers/health-check.controller.js';
-import VersionController from '../controllers/version.controller.js';
+
+import Version from './http_in/version.js';
+import HealthCheck from './http_in/health-check.js';
 
 const router = Router();
 
-router.get('/health', HealthCheckController.status);
-router.get('/version', VersionController.getCurrentVersion);
+router.get('/health', HealthCheck.status);
+router.get('/version', Version.getCurrentVersion);
 
 export default router;
