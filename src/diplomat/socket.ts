@@ -1,74 +1,155 @@
-// import { Server as SocketIOServer } from 'socket.io';
-// import { Server as HTTPServer } from 'http';
-// import { dbGet, dbAll, dbRun } from '../database/db.js';
+import { Server as SocketIOServer } from 'socket.io';
+import { Server as HTTPServer } from 'http';
 
-// export function initializeWebSocket(httpServer: HTTPServer) {
-//   const io = new SocketIOServer(httpServer, {
-//     cors: {
-//       origin: '*', // Configure conforme necessário para produção
-//       methods: ['GET', 'POST'],
-//     },
-//   });
+enum SocketEvents {
+  JOIN_ROOM = 'join-room',
+  LEAVE_ROOM = 'leave-room',
+  PLAY_SOUND = 'play-sound',
+  USER_JOINED = 'user-joined',
+  USER_LEFT = 'user-left',
+  SOUND_PLAYED = 'sound-played',
+  JOINED_ROOM = 'joined-room',
+  LEFT_ROOM = 'left-room',
+  ERROR = 'error',
+}
 
-//   io.on('connection', (socket) => {
-//     console.log(`Cliente conectado: ${socket.id}`);
+interface Room {
+  [socketId: string]: string; // socketId -> roomId
+}
 
-//     // Exemplo: Receber mensagem do cliente
-//     socket.on('message', async (data) => {
-//       console.log('Mensagem recebida:', data);
+interface User {
+  socketId: string;
+  name: string;
+  roomId?: string;
+}
+
+export function initializeWebSocket(httpServer: HTTPServer) {
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST'],
+    },
+  });
+
+  const rooms: Room = {};
+  const users: Map<string, User> = new Map(); // socketId -> User
+
+  io.on('connection', (socket) => {
+    console.log(`Cliente conectado: ${socket.id}`);
+
+    socket.on(SocketEvents.JOIN_ROOM, (data: { roomId: string; name: string }) => {
+      const { roomId, name } = data;
+
+      if (!roomId || !name) {
+        socket.emit(SocketEvents.ERROR, { message: 'Room ID e nome são obrigatórios' });
+        return;
+      }
+
+      // Criar/atualizar usuário
+      const user = {
+        socketId: socket.id,
+        name: name.trim(),
+        roomId: roomId,
+      };
+      users.set(socket.id, user);
+
+      // Sair da sala anterior se existir
+      const currentRoom = rooms[socket.id];
+      if (currentRoom) {
+        socket.leave(currentRoom);
+        socket.to(currentRoom).emit(SocketEvents.USER_LEFT, { 
+          socketId: socket.id,
+          name: user.name 
+        });
+      }
+
+      // Entrar na nova sala
+      socket.join(roomId);
+      rooms[socket.id] = roomId;
       
-//       // Processar mensagem (exemplo: salvar no banco)
-//       try {
-//         // Exemplo de uso do banco de dados
-//         // await dbRun('INSERT INTO messages (content, user_id) VALUES (?, ?)', [data.content, data.userId]);
+      console.log(`${user.name} (${socket.id}) entrou na sala: ${roomId}`);
+      socket.to(roomId).emit(SocketEvents.USER_JOINED, { 
+        socketId: socket.id,
+        name: user.name 
+      });
+      socket.emit(SocketEvents.JOINED_ROOM, { roomId });
+    });
+
+    socket.on(SocketEvents.LEAVE_ROOM, (roomId: string) => {
+      if (!roomId) {
+        socket.emit(SocketEvents.ERROR, { message: 'Room ID é obrigatório' });
+        return;
+      }
+
+      const user = users.get(socket.id);
+      if (!user) {
+        socket.emit(SocketEvents.ERROR, { message: 'Usuário não encontrado' });
+        return;
+      }
+
+      if (rooms[socket.id] === roomId) {
+        socket.leave(roomId);
+        delete rooms[socket.id];
+        delete user.roomId;
         
-//         // Enviar resposta para o cliente
-//         socket.emit('messageResponse', {
-//           success: true,
-//           message: 'Mensagem recebida com sucesso',
-//           data,
-//         });
+        console.log(`${user.name} (${socket.id}) saiu da sala: ${roomId}`);
+        socket.to(roomId).emit(SocketEvents.USER_LEFT, { 
+          socketId: socket.id,
+          name: user.name 
+        });
+        socket.emit(SocketEvents.LEFT_ROOM, { roomId });
+      }
+    });
 
-//         // Broadcast para outros clientes
-//         socket.broadcast.emit('newMessage', data);
-//       } catch (error) {
-//         console.error('Erro ao processar mensagem:', error);
-//         socket.emit('messageResponse', {
-//           success: false,
-//           error: 'Erro ao processar mensagem',
-//         });
-//       }
-//     });
+    socket.on(SocketEvents.PLAY_SOUND, (data: { soundId: string }) => {
+      const { soundId } = data;
 
-//     // Exemplo: Evento de desconexão
-//     socket.on('disconnect', () => {
-//       console.log(`Cliente desconectado: ${socket.id}`);
-//     });
+      if (!soundId) {
+        socket.emit(SocketEvents.ERROR, { message: 'Sound ID é obrigatório' });
+        return;
+      }
 
-//     // Exemplo: Evento customizado
-//     socket.on('joinRoom', (room: string) => {
-//       socket.join(room);
-//       console.log(`Cliente ${socket.id} entrou na sala: ${room}`);
-//       socket.to(room).emit('userJoined', { socketId: socket.id });
-//     });
+      const user = users.get(socket.id);
+      if (!user) {
+        socket.emit(SocketEvents.ERROR, { message: 'Usuário não encontrado' });
+        return;
+      }
 
-//     socket.on('leaveRoom', (room: string) => {
-//       socket.leave(room);
-//       console.log(`Cliente ${socket.id} saiu da sala: ${room}`);
-//       socket.to(room).emit('userLeft', { socketId: socket.id });
-//     });
+      // Pega a sala atual do cliente
+      const roomId = rooms[socket.id];
+      if (!roomId) {
+        socket.emit(SocketEvents.ERROR, { message: 'Você não está em nenhuma sala' });
+        return;
+      }
 
-//     // Exemplo: Enviar dados do banco via WebSocket
-//     socket.on('getUsers', async () => {
-//       try {
-//         const users = await dbAll('SELECT * FROM users');
-//         socket.emit('usersList', users);
-//       } catch (error) {
-//         console.error('Erro ao buscar usuários:', error);
-//         socket.emit('error', { message: 'Erro ao buscar usuários' });
-//       }
-//     });
-//   });
+      console.log(`${user.name} (${socket.id}) solicitou para tocar som ${soundId} na sala ${roomId}`);
+      
+      // Broadcast para todos na sala (inclusive quem solicitou)
+      io.to(roomId).emit(SocketEvents.SOUND_PLAYED, {
+        soundId,
+        triggeredBy: socket.id,
+        triggeredByName: user.name,
+        timestamp: new Date().toISOString(),
+      });
+    });
 
-//   return io;
-// }
+    socket.on('disconnect', () => {
+      const user = users.get(socket.id);
+      const roomId = rooms[socket.id];
+      
+      if (roomId && user) {
+        socket.to(roomId).emit(SocketEvents.USER_LEFT, { 
+          socketId: socket.id,
+          name: user.name 
+        });
+      }
+      
+      delete rooms[socket.id];
+      users.delete(socket.id);
+      
+      console.log(`Cliente desconectado: ${socket.id}${user ? ` (${user.name})` : ''}`);
+    });
+  });
+
+  return io;
+}
