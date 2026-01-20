@@ -25,7 +25,7 @@ const db = drizzle({ connection: { url: process.env.DB_FILE_NAME! } });
  */
 export async function writeSound(sound: SoundInsert): Promise<SoundModel> {
   const newSound = {
-    id: uuid(),
+    id: sound.id,
     name: sound.name,
     url: sound.url,
     playCount: 0,

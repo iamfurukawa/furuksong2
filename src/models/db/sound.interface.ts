@@ -17,6 +17,7 @@ export interface CategoryInsert {
 }
 
 export interface SoundInsert {
+  id: string;
   name: string;
   url: string;
   categories: string[]; // IDs das categorias

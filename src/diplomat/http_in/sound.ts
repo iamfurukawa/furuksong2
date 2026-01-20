@@ -1,10 +1,27 @@
 import type { Request, Response } from "express";
-import SoundAdapter from "../../adapters/sound.adapter.js";
 import SoundController from "../../controllers/sound.controller.js";
+import SoundAdapter from "../../adapters/sound.adapter.js";
 
-export async function createSound(req: Request, res: Response): Promise<void> {
+export interface FileMulter {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  destination: string;
+  filename: string;
+  path: string;
+  buffer: Buffer;
+}
+
+export interface MulterRequest extends Request {
+  file?: FileMulter
+}
+
+export async function createSound(req: MulterRequest, res: Response): Promise<void> {
   const soundRequest = req.body;
-  const sound = await SoundController.createSound(soundRequest);
+  const file = req.file;
+  const sound = await SoundController.createSound(soundRequest, file);
   const response = SoundAdapter.toWireOut(sound);
   res.status(201).json(response);
 }

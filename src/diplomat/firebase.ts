@@ -42,18 +42,15 @@ export function getFirebaseStorage() {
 
 // Função auxiliar para fazer upload de arquivo
 export async function uploadFile(
-  bucketName: string,
-  filePath: string,
-  destination: string,
-  metadata?: { contentType?: string; [key: string]: any }
+  data: Buffer,
+  soundId: string
 ) {
-  const bucket = getFirebaseStorage().bucket(bucketName);
-  const file = bucket.file(destination);
+  const bucket = getFirebaseStorage().bucket(process.env.FIREBASE_STORAGE_BUCKET);
+  const file = bucket.file(`sounds/${soundId}.mp3`);
 
-  await file.save(filePath, {
+  await file.save(data, {
     metadata: {
-      contentType: metadata?.contentType || 'audio/mpeg',
-      ...metadata,
+      contentType: 'audio/mpeg',
     },
   });
 
@@ -63,34 +60,12 @@ export async function uploadFile(
   return file.publicUrl();
 }
 
-// Função auxiliar para fazer upload de buffer
-export async function uploadBuffer(
-  bucketName: string,
-  buffer: Buffer,
-  destination: string,
-  metadata?: { contentType?: string; [key: string]: any }
-) {
-  const bucket = getFirebaseStorage().bucket(bucketName);
-  const file = bucket.file(destination);
-
-  await file.save(buffer, {
-    metadata: {
-      contentType: metadata?.contentType || 'audio/mpeg',
-      ...metadata,
-    },
-  });
-
-  await file.makePublic();
-
-  return file.publicUrl();
-}
-
 // Função para deletar arquivo
-export async function deleteFile(bucketName: string, destination: string) {
-  const bucket = getFirebaseStorage().bucket(bucketName);
-  const file = bucket.file(destination);
+export async function deleteFile(soundId: string) {
+  const bucket = getFirebaseStorage().bucket(process.env.FIREBASE_STORAGE_BUCKET);
+  const file = bucket.file(`sounds/${soundId}.mp3`);
   await file.delete();
-  console.log(`Arquivo ${destination} deletado com sucesso`);
+  console.log(`Arquivo ${`sounds/${soundId}.mp3`} deletado com sucesso`);
 }
 
 export default firebaseApp;
