@@ -11,6 +11,7 @@ enum SocketEvents {
   JOINED_ROOM = 'joined-room',
   LEFT_ROOM = 'left-room',
   ERROR = 'error',
+  USER_STATE_CHANGED = 'user_state_changed',
 }
 
 interface Room {
@@ -21,6 +22,53 @@ interface User {
   socketId: string;
   name: string;
   roomId?: string;
+}
+
+interface UsersState {
+  totalUsers: number;
+  totalRooms: number;
+  rooms: {
+    [roomId: string]: {
+      users: { socketId: string; name: string }[];
+      count: number;
+    };
+  };
+  connectedUsers: { socketId: string; name: string; roomId?: string }[];
+}
+
+// Helper function para obter estado completo dos usuários
+function getUserState(users: Map<string, User>): UsersState {
+  const connectedUsers = Array.from(users.values());
+  const roomIds = new Set(connectedUsers.map(user => user.roomId).filter(Boolean));
+  
+  const rooms: UsersState['rooms'] = {};
+  roomIds.forEach(roomId => {
+    const roomUsers = connectedUsers
+      .filter(user => user.roomId === roomId)
+      .map(user => ({ socketId: user.socketId, name: user.name }));
+    
+    rooms[roomId!] = {
+      users: roomUsers,
+      count: roomUsers.length
+    };
+  });
+  
+  return {
+    totalUsers: connectedUsers.length,
+    totalRooms: roomIds.size,
+    rooms,
+    connectedUsers: connectedUsers.map(user => ({
+      socketId: user.socketId,
+      name: user.name,
+      ...(user.roomId && { roomId: user.roomId })
+    }))
+  };
+}
+
+// Broadcast estado completo para todos conectados
+function broadcastUserState(io: SocketIOServer, users: Map<string, User>) {
+  const state = getUserState(users);
+  io.emit(SocketEvents.USER_STATE_CHANGED, state);
 }
 
 export function initializeWebSocket(httpServer: HTTPServer) {
@@ -73,6 +121,9 @@ export function initializeWebSocket(httpServer: HTTPServer) {
         name: user.name 
       });
       socket.emit(SocketEvents.JOINED_ROOM, { roomId });
+      
+      // Broadcast estado completo para todos
+      broadcastUserState(io, users);
     });
 
     socket.on(SocketEvents.LEAVE_ROOM, (data: { roomId: string }) => {
@@ -100,6 +151,9 @@ export function initializeWebSocket(httpServer: HTTPServer) {
           name: user.name 
         });
         socket.emit(SocketEvents.LEFT_ROOM, { roomId });
+        
+        // Broadcast estado completo para todos
+        broadcastUserState(io, users);
       }
     });
 
@@ -150,6 +204,14 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       users.delete(socket.id);
       
       console.log(`Cliente desconectado: ${socket.id}${user ? ` (${user.name})` : ''}`);
+      
+      // Broadcast estado completo para todos
+      broadcastUserState(io, users);
+    });
+
+    // Enviar estado completo quando conecta
+    socket.on('connect', () => {
+      socket.emit(SocketEvents.USER_STATE_CHANGED, getUserState(users));
     });
   });
 
