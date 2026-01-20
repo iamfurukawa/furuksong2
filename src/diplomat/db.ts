@@ -1,24 +1,17 @@
 import { drizzle } from 'drizzle-orm/libsql';
-import { eq } from 'drizzle-orm';
-import { uuid } from 'uuidv4';
-import {
-  soundsTable,
-  categoriesTable,
-  soundsToCategoriesTable,
-  versionTable,
-  roomsTable,
-} from '../wire/sqlite3/schema.js';
+import { soundsTable, soundsToCategoriesTable, categoriesTable, versionTable, roomsTable } from "../wire/sqlite3/schema.js";
+import { eq, inArray } from "drizzle-orm";
+import { v4 as uuid } from "uuid";
 import type {
-  SoundWithCategories,
   SoundInsert,
-  Category,
   CategoryInsert,
 } from '../models/db/sound.interface.js';
 import type { Version } from '../models/db/version.interface.js';
-import type { Room, RoomInsert } from '../models/db/room.interface.js';
+import type { RoomInsert } from '../models/db/room.interface.js';
 import type { VersionModel } from '../models/version.js';
 import type { CategoryModel } from '../models/category.js';
 import type { RoomModel } from '../models/room.js';
+import type { SoundModel } from '../models/sound.js';
 import VersionAdapter from '../adapters/version.adapter.js';
 import CategoryAdapter from '../adapters/category.adapter.js';
 import RoomAdapter from '../adapters/room.adapter.js';
@@ -30,8 +23,7 @@ const db = drizzle({ connection: { url: process.env.DB_FILE_NAME! } });
 /**
  * Escreve um novo som com suas categorias
  */
-export async function writeSound(sound: SoundInsert): Promise<void> {
-
+export async function writeSound(sound: SoundInsert): Promise<SoundModel> {
   const newSound = {
     id: uuid(),
     name: sound.name,
@@ -44,23 +36,42 @@ export async function writeSound(sound: SoundInsert): Promise<void> {
   await db.insert(soundsTable).values(newSound);
 
   // Inserir relacionamentos com categorias
-  if (sound.categoryIds.length > 0) {
-    const relations = sound.categoryIds.map((categoryId) => ({
+  let categories: { id: string; label: string }[] = [];
+  if (sound.categories.length > 0) {
+    const relations = sound.categories.map((categoryId) => ({
       soundId: newSound.id,
       categoryId,
     }));
 
     await db.insert(soundsToCategoriesTable).values(relations);
+
+    // Buscar categorias associadas
+    categories = await db
+      .select({
+        id: categoriesTable.id,
+        label: categoriesTable.label,
+      })
+      .from(categoriesTable)
+      .where(inArray(categoriesTable.id, sound.categories));
   }
+
+  return {
+    id: newSound.id,
+    name: newSound.name,
+    url: newSound.url,
+    playCount: newSound.playCount,
+    createdAt: newSound.createdAt,
+    categories: categories.map((category) => CategoryAdapter.toModel(category)),
+  };
 }
 
 /**
  * Lê todos os sons com suas categorias
  */
-export async function readAllSounds(): Promise<SoundWithCategories[]> {
+export async function readAllSounds(): Promise<SoundModel[]> {
   const sounds = await db.select().from(soundsTable);
 
-  const soundsWithCategories: SoundWithCategories[] = [];
+  const soundsWithCategories: SoundModel[] = [];
 
   for (const sound of sounds) {
     const categories = await db
@@ -73,8 +84,12 @@ export async function readAllSounds(): Promise<SoundWithCategories[]> {
       .where(eq(soundsToCategoriesTable.soundId, sound.id));
 
     soundsWithCategories.push({
-      ...sound,
-      categories,
+      id: sound.id,
+      name: sound.name,
+      url: sound.url,
+      playCount: sound.playCount,
+      createdAt: sound.createdAt,
+      categories: categories.map((category) => CategoryAdapter.toModel(category)),
     });
   }
 
