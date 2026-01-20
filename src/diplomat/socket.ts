@@ -11,7 +11,7 @@ enum SocketEvents {
   JOINED_ROOM = 'joined-room',
   LEFT_ROOM = 'left-room',
   ERROR = 'error',
-  USER_STATE_CHANGED = 'user_state_changed',
+  USER_STATE_CHANGED = 'user-state-changed',
 }
 
 interface Room {
