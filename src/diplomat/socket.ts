@@ -75,7 +75,9 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       socket.emit(SocketEvents.JOINED_ROOM, { roomId });
     });
 
-    socket.on(SocketEvents.LEAVE_ROOM, (roomId: string) => {
+    socket.on(SocketEvents.LEAVE_ROOM, (data: { roomId: string }) => {
+      const { roomId } = data;
+
       if (!roomId) {
         socket.emit(SocketEvents.ERROR, { message: 'Room ID é obrigatório' });
         return;
