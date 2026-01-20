@@ -3,17 +3,17 @@ import type { CategoryModel } from '../models/category.js';
 import CategoryLogic from '../logic/category.js';
 
 export default class CategoryController {
-  static async createCategory(category: CategoryModel) {
+  static async createCategory(category: CategoryModel): Promise<CategoryModel> {
     CategoryLogic.isValid(category);
     return await createCategory(category);
   }
 
-  static async getCategories() {
+  static async getCategories(): Promise<CategoryModel[]> {
     return await getCategories();
   }
 
-  static async deleteCategory(id: string) {
+  static async deleteCategory(id: string): Promise<boolean> {
     CategoryLogic.isValidId(id);
-    await deleteCategory(id);
+    return await deleteCategory(id);
   }
 }

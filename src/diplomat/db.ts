@@ -16,6 +16,12 @@ import type {
 } from '../models/db/sound.interface.js';
 import type { Version } from '../models/db/version.interface.js';
 import type { Room, RoomInsert } from '../models/db/room.interface.js';
+import type { VersionModel } from '../models/version.js';
+import type { CategoryModel } from '../models/category.js';
+import type { RoomModel } from '../models/room.js';
+import VersionAdapter from '../adapters/version.adapter.js';
+import CategoryAdapter from '../adapters/category.adapter.js';
+import RoomAdapter from '../adapters/room.adapter.js';
 
 const db = drizzle({ connection: { url: process.env.DB_FILE_NAME! } });
 
@@ -80,25 +86,22 @@ export async function readAllSounds(): Promise<SoundWithCategories[]> {
 /**
  * Cria uma nova categoria
  */
-export async function createCategory(category: CategoryInsert): Promise<Category> {
+export async function createCategory(category: CategoryInsert): Promise<CategoryModel> {
   const newCategory = {
     id: uuid(),
     label: category.label,
   };
 
   await db.insert(categoriesTable).values(newCategory);
-  return newCategory;
+  return CategoryAdapter.toModel(newCategory);
 }
 
 /**
  * Lê todas as categorias
  */
-export async function getCategories(): Promise<Category[]> {
+export async function getCategories(): Promise<CategoryModel[]> {
   const categories = await db.select().from(categoriesTable);
-  return categories.map((category) => ({
-    id: category.id,
-    label: category.label,
-  }));
+  return categories.map((category) => CategoryAdapter.toModel(category));
 }
 
 /**
@@ -120,27 +123,28 @@ export async function deleteCategory(id: string): Promise<boolean> {
 /**
  * Escreve uma nova versão
  */
-async function createVersion(version: Version): Promise<Version> {
-  await db.insert(versionTable).values(version);
-  return { id: version.id };
+async function createVersion(version: VersionModel): Promise<Version> {
+  await db.insert(versionTable).values(VersionAdapter.toModel(version));
+  return VersionAdapter.toModel(version);
 }
 
 /**
  * Lê a versão atual (retorna o ID mais recente)
  * Se não existir, cria uma versão com valor 0
  */
-export async function getVersion(): Promise<Version> {
+export async function getVersion(): Promise<VersionModel> {
   const versions = await db
     .select()
     .from(versionTable)
     .limit(1);
 
   if (versions.length > 0) {
-    return { id: versions[0]!.id };
+    return VersionAdapter.toModel(versions[0]!);
   }
 
   // Se não existir, cria uma versão com valor 0
-  return await createVersion({ id: 0 });
+  const newVersion = await createVersion({ id: 0 });
+  return VersionAdapter.toModel(newVersion);
 }
 
 /**
@@ -158,7 +162,7 @@ export async function incrementVersion(): Promise<Version> {
 /**
  * Cria uma nova sala
  */
-export async function createRoom(room: RoomInsert): Promise<Room> {
+export async function createRoom(room: RoomInsert): Promise<RoomModel> {
   const newRoom = {
     id: uuid(),
     name: room.name,
@@ -166,26 +170,21 @@ export async function createRoom(room: RoomInsert): Promise<Room> {
   }
 
   await db.insert(roomsTable).values(newRoom);
-  return newRoom;
+  return RoomAdapter.toModel(newRoom);
 }
 
 /**
  * Recupera todas as salas
  */
-export async function getRooms(): Promise<Room[]> {
+export async function getRooms(): Promise<RoomModel[]> {
   const rooms = await db.select().from(roomsTable);
-  return rooms.map((room) => ({
-    id: room.id,
-    name: room.name,
-    createdAt: room.createdAt,
-  }));
+  return rooms.map((room) => RoomAdapter.toModel(room));
 }
 
 /**
  * Deleta uma sala pelo ID
  */
 export async function deleteRoom(id: string): Promise<boolean> {
-  // Verificar se a sala existe antes de deletar
   const rooms = await db.select().from(roomsTable).where(eq(roomsTable.id, id));
   
   if (rooms.length === 0) {

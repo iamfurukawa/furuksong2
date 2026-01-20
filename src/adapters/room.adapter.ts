@@ -4,16 +4,19 @@ import type { RoomRequest } from "../wire/in/room.js";
 import type { RoomResponse, RoomListResponse } from "../wire/out/room.js";
 
 class RoomAdapter {
+  static toModel(room: RoomRequest | Room): RoomModel {
+    if ('id' in room && 'createdAt' in room) {
+      return { id: room.id, name: room.name, createdAt: room.createdAt };
+    }
+    return { id: null, name: room.name, createdAt: null };
+  }
+
   static toWireOut(room: Room): RoomResponse {
     return { id: room.id, name: room.name, createdAt: room.createdAt };
   }
 
   static toWireOutList(rooms: Room[]): RoomListResponse {
     return { rooms: rooms.map(room => this.toWireOut(room)) };
-  }
-
-  static toModel(room: RoomRequest): RoomModel {
-    return { name: room.name };
   }
 }
 
