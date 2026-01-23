@@ -84,12 +84,37 @@ export function initializeWebSocket(httpServer: HTTPServer) {
 
   io.on('connection', (socket) => {
     console.log(`Cliente conectado: ${socket.id}`);
+    
+    // Limitar número de conexões simultâneas
+    const maxConnections = 100; // Limite máximo de conexões
+    if (io.engine.clientsCount >= maxConnections) {
+      console.warn('Número máximo de conexões atingido. Rejeitando nova conexão.');
+      socket.emit(SocketEvents.ERROR, { message: 'Servidor sobrecarregado. Tente novamente mais tarde.' });
+      socket.disconnect();
+      return;
+    }
+    
+    // Enviar estado completo quando conecta
+    socket.emit(SocketEvents.USER_STATE_CHANGED, getUserState(users));
+    
+    // Log para debug - mostrar todos os clientes conectados
+    console.log('Clientes conectados:', Array.from(users.keys()));
+    console.log('Salas ativas:', Object.keys(rooms));
+    
+    broadcastUserState(io, users);
 
     socket.on(SocketEvents.JOIN_ROOM, (data: { roomId: string; name: string }) => {
       const { roomId, name } = data;
 
       if (!roomId || !name) {
         socket.emit(SocketEvents.ERROR, { message: 'Room ID e nome são obrigatórios' });
+        return;
+      }
+
+      // Verificar se já está na sala
+      const currentRoom = rooms[socket.id];
+      if (currentRoom === roomId) {
+        socket.emit(SocketEvents.ERROR, { message: 'Você já está nesta sala' });
         return;
       }
 
@@ -101,9 +126,8 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       };
       users.set(socket.id, user);
 
-      // Sair da sala anterior se existir
-      const currentRoom = rooms[socket.id];
-      if (currentRoom) {
+      // Sair da sala anterior se existir E for diferente da atual
+      if (currentRoom && currentRoom !== roomId) {
         socket.leave(currentRoom);
         socket.to(currentRoom).emit(SocketEvents.USER_LEFT, { 
           socketId: socket.id,
@@ -181,11 +205,22 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       console.log(`${user.name} (${socket.id}) solicitou para tocar som ${soundId} na sala ${roomId}`);
       
       // Broadcast para todos na sala (inclusive quem solicitou)
+      console.log(`Broadcasting to room ${roomId}:`, { soundId, triggeredBy: socket.id, triggeredByName: user.name });
       io.to(roomId).emit(SocketEvents.SOUND_PLAYED, {
         soundId,
         triggeredBy: socket.id,
         triggeredByName: user.name,
         timestamp: new Date().toISOString(),
+      });
+      
+      // Também broadcast global para todas as guias abertas
+      console.log(`Broadcasting globally:`, { soundId, triggeredBy: socket.id, triggeredByName: user.name });
+      io.emit(SocketEvents.SOUND_PLAYED, {
+        soundId,
+        triggeredBy: socket.id,
+        triggeredByName: user.name,
+        timestamp: new Date().toISOString(),
+        roomId: roomId,
       });
     });
 
