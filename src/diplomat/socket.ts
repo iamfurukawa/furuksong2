@@ -88,10 +88,7 @@ export function initializeWebSocket(httpServer: HTTPServer) {
     socket.on(SocketEvents.JOIN_ROOM, (data: { roomId: string; name: string }) => {
       const { roomId, name } = data;
 
-      if (!roomId || !name) {
-        socket.emit(SocketEvents.ERROR, { message: 'Room ID e nome são obrigatórios' });
-        return;
-      }
+      if (!roomId || !name) return;
 
       // Verificar se já está na sala
       const currentRoom = rooms[socket.id];
@@ -118,37 +115,6 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       
       // Broadcast estado completo para todos
       broadcastUserState(io, users);
-    });
-
-    socket.on(SocketEvents.LEAVE_ROOM, (data: { roomId: string }) => {
-      const { roomId } = data;
-
-      if (!roomId) {
-        socket.emit(SocketEvents.ERROR, { message: 'Room ID é obrigatório' });
-        return;
-      }
-
-      const user = users.get(socket.id);
-      if (!user) {
-        socket.emit(SocketEvents.ERROR, { message: 'Usuário não encontrado' });
-        return;
-      }
-
-      if (rooms[socket.id] === roomId) {
-        socket.leave(roomId);
-        delete rooms[socket.id];
-        delete user.roomId;
-        
-        console.log(`${user.name} (${socket.id}) saiu da sala: ${roomId}`);
-        socket.to(roomId).emit(SocketEvents.USER_LEFT, { 
-          socketId: socket.id,
-          name: user.name 
-        });
-        socket.emit(SocketEvents.LEFT_ROOM, { roomId });
-        
-        // Broadcast estado completo para todos
-        broadcastUserState(io, users);
-      }
     });
 
     socket.on(SocketEvents.PLAY_SOUND, (data: { soundId: string }) => {
