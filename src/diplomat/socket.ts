@@ -209,22 +209,11 @@ export function initializeWebSocket(httpServer: HTTPServer) {
     });
 
     socket.on('disconnect', () => {
-      const user = users.get(socket.id);
-      const roomId = rooms[socket.id];
-      
-      if (roomId && user) {
-        socket.to(roomId).emit(SocketEvents.USER_LEFT, { 
-          socketId: socket.id,
-          name: user.name 
-        });
-      }
-      
       delete rooms[socket.id];
       users.delete(socket.id);
       
       console.log(`Cliente desconectado: ${socket.id}`);
-      
-      // Broadcast estado completo para todos
+
       broadcastUserState(io, users);
     });
   });
