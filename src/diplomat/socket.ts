@@ -120,43 +120,20 @@ export function initializeWebSocket(httpServer: HTTPServer) {
     socket.on(SocketEvents.PLAY_SOUND, (data: { soundId: string }) => {
       const { soundId } = data;
 
-      if (!soundId) {
-        socket.emit(SocketEvents.ERROR, { message: 'Sound ID é obrigatório' });
-        return;
-      }
+      if (!soundId) return;
 
       const user = users.get(socket.id);
-      if (!user) {
-        socket.emit(SocketEvents.ERROR, { message: 'Usuário não encontrado' });
-        return;
-      }
+      if (!user) return;
 
-      // Pega a sala atual do cliente
       const roomId = rooms[socket.id];
-      if (!roomId) {
-        socket.emit(SocketEvents.ERROR, { message: 'Você não está em nenhuma sala' });
-        return;
-      }
+      if (!roomId) return;
 
-      console.log(`${user.name} (${socket.id}) solicitou para tocar som ${soundId} na sala ${roomId}`);
-      
-      // Broadcast para todos na sala (inclusive quem solicitou)
       console.log(`Broadcasting to room ${roomId}:`, { soundId, triggeredBy: socket.id, triggeredByName: user.name });
       io.to(roomId).emit(SocketEvents.SOUND_PLAYED, {
         soundId,
         triggeredBy: socket.id,
         triggeredByName: user.name,
         timestamp: new Date().toISOString(),
-      });
-      
-      // Também broadcast global para todas as guias abertas
-      console.log(`Broadcasting globally:`, { soundId, triggeredBy: socket.id, triggeredByName: user.name });
-      io.emit(SocketEvents.SOUND_PLAYED, {
-        soundId,
-        triggeredBy: socket.id,
-        triggeredByName: user.name,
-        timestamp: new Date().toISOString(),
-        roomId: roomId,
       });
     });
 
