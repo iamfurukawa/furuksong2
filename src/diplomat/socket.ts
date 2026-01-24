@@ -84,8 +84,6 @@ export function initializeWebSocket(httpServer: HTTPServer) {
 
   io.on('connection', (socket) => {
     console.log(`Cliente conectado: ${socket.id}`);
-     
-    broadcastUserState(io, users);
 
     socket.on(SocketEvents.JOIN_ROOM, (data: { roomId: string; name: string }) => {
       const { roomId, name } = data;
@@ -97,10 +95,7 @@ export function initializeWebSocket(httpServer: HTTPServer) {
 
       // Verificar se já está na sala
       const currentRoom = rooms[socket.id];
-      if (currentRoom === roomId) {
-        socket.emit(SocketEvents.ERROR, { message: 'Você já está nesta sala' });
-        return;
-      }
+      if (currentRoom === roomId) return;
 
       // Criar/atualizar usuário
       const user = {
@@ -110,13 +105,9 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       };
       users.set(socket.id, user);
 
-      // Sair da sala anterior se existir E for diferente da atual
-      if (currentRoom && currentRoom !== roomId) {
+      // Sair da sala anterior se existir
+      if (currentRoom) {
         socket.leave(currentRoom);
-        socket.to(currentRoom).emit(SocketEvents.USER_LEFT, { 
-          socketId: socket.id,
-          name: user.name 
-        });
       }
 
       // Entrar na nova sala
@@ -124,11 +115,6 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       rooms[socket.id] = roomId;
       
       console.log(`${user.name} (${socket.id}) entrou na sala: ${roomId}`);
-      socket.to(roomId).emit(SocketEvents.USER_JOINED, { 
-        socketId: socket.id,
-        name: user.name 
-      });
-      socket.emit(SocketEvents.JOINED_ROOM, { roomId });
       
       // Broadcast estado completo para todos
       broadcastUserState(io, users);
