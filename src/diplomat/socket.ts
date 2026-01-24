@@ -13,7 +13,7 @@ enum SocketEvents {
 }
 
 interface Room {
-  [socketId: string]: string; // socketId -> roomId
+  [socketId: string]: string;
 }
 
 interface User {
@@ -23,8 +23,6 @@ interface User {
 }
 
 interface UsersState {
-  totalUsers: number;
-  totalRooms: number;
   rooms: {
     [roomId: string]: {
       users: { socketId: string; name: string }[];
@@ -51,8 +49,6 @@ function getUserState(users: Map<string, User>): UsersState {
   });
   
   return {
-    totalUsers: connectedUsers.length,
-    totalRooms: roomIds.size,
     rooms,
     connectedUsers: connectedUsers.map(user => ({
       socketId: user.socketId,
