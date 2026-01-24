@@ -84,23 +84,7 @@ export function initializeWebSocket(httpServer: HTTPServer) {
 
   io.on('connection', (socket) => {
     console.log(`Cliente conectado: ${socket.id}`);
-    
-    // Limitar número de conexões simultâneas
-    const maxConnections = 100; // Limite máximo de conexões
-    if (io.engine.clientsCount >= maxConnections) {
-      console.warn('Número máximo de conexões atingido. Rejeitando nova conexão.');
-      socket.emit(SocketEvents.ERROR, { message: 'Servidor sobrecarregado. Tente novamente mais tarde.' });
-      socket.disconnect();
-      return;
-    }
-    
-    // Enviar estado completo quando conecta
-    socket.emit(SocketEvents.USER_STATE_CHANGED, getUserState(users));
-    
-    // Log para debug - mostrar todos os clientes conectados
-    console.log('Clientes conectados:', Array.from(users.keys()));
-    console.log('Salas ativas:', Object.keys(rooms));
-    
+     
     broadcastUserState(io, users);
 
     socket.on(SocketEvents.JOIN_ROOM, (data: { roomId: string; name: string }) => {
@@ -238,15 +222,10 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       delete rooms[socket.id];
       users.delete(socket.id);
       
-      console.log(`Cliente desconectado: ${socket.id}${user ? ` (${user.name})` : ''}`);
+      console.log(`Cliente desconectado: ${socket.id}`);
       
       // Broadcast estado completo para todos
       broadcastUserState(io, users);
-    });
-
-    // Enviar estado completo quando conecta
-    socket.on('connect', () => {
-      socket.emit(SocketEvents.USER_STATE_CHANGED, getUserState(users));
     });
   });
 
