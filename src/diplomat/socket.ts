@@ -26,7 +26,6 @@ interface UsersState {
   rooms: {
     [roomId: string]: {
       users: { socketId: string; name: string }[];
-      count: number;
     };
   };
   connectedUsers: { socketId: string; name: string; roomId?: string }[];
@@ -43,8 +42,7 @@ function getUserState(users: Map<string, User>): UsersState {
       .map(user => ({ socketId: user.socketId, name: user.name }));
     
     rooms[roomId!] = {
-      users: roomUsers,
-      count: roomUsers.length
+      users: roomUsers
     };
   });
   
