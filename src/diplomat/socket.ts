@@ -74,6 +74,8 @@ export function initializeWebSocket(httpServer: HTTPServer) {
 
   io.on('connection', (socket) => {
     console.log(`${getTimestamp()} Cliente conectado: ${socket.id}`);
+    
+    broadcastUserState(io, users);
 
     socket.on(SocketEvents.JOIN_ROOM, (data: { roomId: string; name: string }) => {
       const { roomId, name } = data;
