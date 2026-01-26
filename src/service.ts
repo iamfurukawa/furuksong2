@@ -11,7 +11,7 @@ import './diplomat/db.js';
 
 const app = express();
 const server = createServer(app);
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Middlewares
 app.use(cors());
@@ -27,6 +27,6 @@ initializeFirebase();
 // Initialize WebSocket
 const io = initializeWebSocket(server);
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
