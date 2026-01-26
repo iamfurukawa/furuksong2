@@ -1,12 +1,12 @@
-version: '3.8'
-
 services:
   furuksong2-server:
+    container_name: furuksong2-server
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
+    networks:
+      cloudflare:
+        ipv4_address: 172.25.0.30  # IP fixo na mesma rede do Traefik
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:./dev.db
@@ -23,3 +23,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.furuksong2-server.rule=Host(`furuksong2.13997906387.xyz`)"
+      - "traefik.http.routers.furuksong2-server.entrypoints=web"
+      - "traefik.http.services.furuksong2-server.loadbalancer.server.port=3000"
+
+networks:
+  cloudflare:
+    external: true
