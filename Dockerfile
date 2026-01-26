@@ -1,5 +1,5 @@
-# Use Node.js 18 LTS as base
-FROM node:18-alpine AS base
+# Use Node.js 20 LTS as base
+FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -9,11 +9,13 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
