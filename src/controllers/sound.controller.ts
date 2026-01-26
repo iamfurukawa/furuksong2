@@ -16,7 +16,7 @@ class SoundController {
     try {
       // Fazer upload para Firebase
       const url = await uploadFile(
-        file.buffer,
+        file!.buffer,
         soundId,
       );
       

@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { Readable } from "stream";
 import SoundController from "../../controllers/sound.controller.js";
 import SoundAdapter from "../../adapters/sound.adapter.js";
 
@@ -12,6 +13,7 @@ export interface FileMulter {
   filename: string;
   path: string;
   buffer: Buffer;
+  stream: Readable;
 }
 
 export interface MulterRequest extends Request {

@@ -27,11 +27,11 @@ class SoundAdapter {
 
   static toWireOut(sound: SoundModel): SoundResponse {
     return {
-      id: sound.id ?? null,
+      id: sound.id || '',
       name: sound.name,
       url: sound.url,
       playCount: sound.playCount,
-      createdAt: sound.createdAt ?? null,
+      createdAt: sound.createdAt || Date.now(),
       categories: sound.categories.map((category) => ({ 
         id: category.id || '', 
         label: category.label 

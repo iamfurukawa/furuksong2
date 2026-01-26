@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/service.ts",
-    "build": "tsc --noEmitOnError false || true",
+    "build": "tsc",
     "start": "node dist/service.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

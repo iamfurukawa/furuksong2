@@ -12,11 +12,11 @@ class CategoryAdapter {
     }
   }
 
-  static toWireOut(category: Category): CategoryResponse {
-    return { id: category.id, label: category.label };
+  static toWireOut(category: CategoryModel): CategoryResponse {
+    return { id: category.id || '', label: category.label };
   }
 
-  static toWireOutList(categories: Category[]): CategoryListResponse {
+  static toWireOutList(categories: CategoryModel[]): CategoryListResponse {
     return { categories: categories.map(category => this.toWireOut(category)) };
   }
 }

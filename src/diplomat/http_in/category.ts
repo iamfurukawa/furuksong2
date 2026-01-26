@@ -18,7 +18,7 @@ export default class Category {
 
   static async deleteCategory(req: Request, res: Response) {
     const { id } = req.params;
-    await CategoryController.deleteCategory(id);
+    await CategoryController.deleteCategory(id as string);
     res.status(204).send();
   }
 }

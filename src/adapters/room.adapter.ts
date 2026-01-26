@@ -11,11 +11,11 @@ class RoomAdapter {
     return { id: null, name: room.name, createdAt: null };
   }
 
-  static toWireOut(room: Room): RoomResponse {
-    return { id: room.id, name: room.name, createdAt: room.createdAt };
+  static toWireOut(room: RoomModel): RoomResponse {
+    return { id: room.id || '', name: room.name, createdAt: room.createdAt || Date.now() };
   }
 
-  static toWireOutList(rooms: Room[]): RoomListResponse {
+  static toWireOutList(rooms: RoomModel[]): RoomListResponse {
     return { rooms: rooms.map(room => this.toWireOut(room)) };
   }
 }

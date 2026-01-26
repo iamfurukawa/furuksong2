@@ -18,7 +18,7 @@ export default class Room {
 
   static async deleteRoom(req: Request, res: Response) {
     const { id } = req.params;
-    await RoomController.deleteRoom(id);
+    await RoomController.deleteRoom(id as string);
     res.status(204).send();
   }
 }

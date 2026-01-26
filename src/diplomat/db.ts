@@ -16,7 +16,7 @@ import VersionAdapter from '../adapters/version.adapter.js';
 import CategoryAdapter from '../adapters/category.adapter.js';
 import RoomAdapter from '../adapters/room.adapter.js';
 
-const db = drizzle({ connection: { url: process.env.DB_FILE_NAME! } });
+const db = drizzle({ connection: { url: process.env.DATABASE_URL! } });
 
 // ==================== SOUND + CATEGORIES ====================
 
