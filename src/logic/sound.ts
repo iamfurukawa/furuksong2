@@ -7,6 +7,11 @@ class SoundLogic {
     if (!sound.name || sound.name.trim().length === 0) {
       throw new ValidationError("Sound name cannot be empty");
     }
+    
+    // Validar que categories existe e não está vazio
+    if (!sound.categories || !Array.isArray(sound.categories) || sound.categories.length === 0) {
+      throw new ValidationError("Pelo menos uma categoria é obrigatória");
+    }
   }
 
   static validateSoundFile(file?: FileMulter): void {

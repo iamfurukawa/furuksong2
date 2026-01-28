@@ -23,6 +23,12 @@ export interface MulterRequest extends Request {
 export async function createSound(req: MulterRequest, res: Response): Promise<void> {
   const soundRequest = req.body;
   const file = req.file;
+  
+  // Processar categories: converter de string para array se necessário
+  if (soundRequest.categories && typeof soundRequest.categories === 'string') {
+    soundRequest.categories = soundRequest.categories.split(',').map((cat: string) => cat.trim()).filter((cat: string) => cat);
+  }
+  
   const sound = await SoundController.createSound(soundRequest, file);
   const response = SoundAdapter.toWireOut(sound);
   res.status(201).json(response);
