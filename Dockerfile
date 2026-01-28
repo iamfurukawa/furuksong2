@@ -40,6 +40,7 @@ COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=deps --chown=nodejs:nodejs /app/node_modules/.bin/drizzle-kit ./node_modules/.bin/
 COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nodejs:nodejs /app/drizzle.config.postgres.ts ./drizzle.config.postgres.ts
 
 # Expose port
 EXPOSE 3000
