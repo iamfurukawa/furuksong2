@@ -15,8 +15,6 @@ services:
       FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET}
     ports:
       - "3000:3000"
-    depends_on:
-      - postgres
     networks:
       - nginxnet
 
