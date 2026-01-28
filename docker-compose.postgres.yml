@@ -31,7 +31,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@furuksong2.com
       PGADMIN_DEFAULT_PASSWORD: admin123
     ports:
-      - "8080:80"
+      - "8081:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:

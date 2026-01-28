@@ -86,7 +86,7 @@ docker-compose -f docker-compose.postgres.yml down
 - **Furuksong2 Server**: http://localhost:3000
   - Health Check: http://localhost:3000/health
 
-- **PgAdmin**: http://localhost:8080
+- **PgAdmin**: http://localhost:8081
   - Email: admin@furuksong2.com
   - Password: admin123
 
