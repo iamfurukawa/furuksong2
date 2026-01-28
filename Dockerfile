@@ -11,6 +11,9 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install --omit=dev
 
+# Install drizzle-kit for migrations
+RUN npm install drizzle-kit --save-dev
+
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
@@ -35,6 +38,7 @@ RUN adduser --system --uid 1001 nodejs
 # Copy the built application
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/node_modules/.bin/drizzle-kit ./node_modules/.bin/
 COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
 
 # Expose port
