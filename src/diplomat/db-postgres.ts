@@ -1,5 +1,5 @@
-import { drizzle } from 'drizzle-orm/libsql';
-import { soundsTable, soundsToCategoriesTable, categoriesTable, versionTable, roomsTable } from "../wire/sqlite3/schema.js";
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { soundsTable, soundsToCategoriesTable, categoriesTable, versionTable, roomsTable } from "../wire/postgresql/schema.js";
 import { eq, inArray } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import type {
@@ -15,8 +15,13 @@ import type { SoundModel } from '../models/sound.js';
 import VersionAdapter from '../adapters/version.adapter.js';
 import CategoryAdapter from '../adapters/category.adapter.js';
 import RoomAdapter from '../adapters/room.adapter.js';
+import { Pool } from 'pg';
 
-const db = drizzle({ connection: { url: process.env.DATABASE_URL! } });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL!,
+});
+
+const db = drizzle(pool);
 
 // ==================== SOUND + CATEGORIES ====================
 
@@ -29,7 +34,7 @@ export async function writeSound(sound: SoundInsert): Promise<SoundModel> {
     name: sound.name,
     url: sound.url,
     playCount: 0,
-    createdAt: Date.now(),
+    createdAt: Math.floor(Date.now() / 1000), // Converter para segundos Unix
   };
 
   // Inserir o som
@@ -181,7 +186,7 @@ export async function createRoom(room: RoomInsert): Promise<RoomModel> {
   const newRoom = {
     id: uuid(),
     name: room.name,
-    createdAt: Date.now(),
+    createdAt: Math.floor(Date.now() / 1000), // Converter para segundos Unix
   }
 
   await db.insert(roomsTable).values(newRoom);

@@ -7,7 +7,7 @@ import routes from './diplomat/server.js';
 import { initializeFirebase } from './diplomat/firebase.js';
 import { initializeWebSocket } from './diplomat/socket.js';
 import { errorHandler } from './middleware/error.middleware.js';
-import './diplomat/db.js';
+import './diplomat/db-postgres.js';
 
 const app = express();
 const server = createServer(app);

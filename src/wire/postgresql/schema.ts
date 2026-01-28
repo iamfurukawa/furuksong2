@@ -1,7 +1,7 @@
-import { sqliteTable, text, integer, primaryKey } from "drizzle-orm/sqlite-core";
+import { pgTable, text, integer, primaryKey, serial } from "drizzle-orm/pg-core";
 
 // Tabela de sons
-export const soundsTable = sqliteTable("sounds", {
+export const soundsTable = pgTable("sounds", {
   id: text().primaryKey(), // UUID
   name: text().notNull(),
   url: text().notNull(),
@@ -10,13 +10,13 @@ export const soundsTable = sqliteTable("sounds", {
 });
 
 // Tabela de categorias
-export const categoriesTable = sqliteTable("categories", {
+export const categoriesTable = pgTable("categories", {
   id: text().primaryKey(), // UUID
   label: text().notNull().unique(),
 });
 
 // Tabela intermediária para relacionamento N:N entre sons e categorias
-export const soundsToCategoriesTable = sqliteTable(
+export const soundsToCategoriesTable = pgTable(
   "sounds_to_categories",
   {
     soundId: text()
@@ -32,12 +32,12 @@ export const soundsToCategoriesTable = sqliteTable(
 );
 
 // Tabela de versão (controle de versão do schema)
-export const versionTable = sqliteTable("version", {
-  id: integer().primaryKey(), // ID numérico incrementável
+export const versionTable = pgTable("version", {
+  id: serial().primaryKey(), // ID numérico incrementável
 });
 
 // Tabela de salas
-export const roomsTable = sqliteTable("rooms", {
+export const roomsTable = pgTable("rooms", {
   id: text().primaryKey(), // UUID
   name: text().notNull(),
   createdAt: integer().notNull(), // timestamp Unix

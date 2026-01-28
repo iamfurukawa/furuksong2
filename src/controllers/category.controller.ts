@@ -1,4 +1,4 @@
-import { createCategory, getCategories, deleteCategory } from '../diplomat/db.js';
+import { createCategory, getCategories, deleteCategory } from '../diplomat/db-postgres.js';
 import type { CategoryModel } from '../models/category.js';
 import CategoryLogic from '../logic/category.js';
 

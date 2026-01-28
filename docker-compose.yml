@@ -1,33 +1,25 @@
 services:
+  # Furuksong2 Server
   furuksong2-server:
-    container_name: furuksong2-server
+    container_name: furuksong2
     build:
       context: .
       dockerfile: Dockerfile
-    networks:
-      - cloudflare
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=file:./data/dev.db
-      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
-      - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
-      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
-      - FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET}
-    volumes:
-      - ./data:/app/data
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.furuksong2-server.rule=Host(`furuksong2.13997906387.xyz`)"
-      - "traefik.http.routers.furuksong2-server.entrypoints=web"
-      - "traefik.http.services.furuksong2-server.loadbalancer.server.port=3000"
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/furuksong2
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    networks:
+      - nginxnet
 
 networks:
-  cloudflare:
+  nginxnet:
     external: true
