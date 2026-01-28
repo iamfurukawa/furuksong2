@@ -7,6 +7,8 @@ function getTimestamp(): string {
 
 enum SocketEvents {
   JOIN_ROOM = 'join-room',
+  LEAVE_ROOM = 'leave-room',
+  ROOM_JOINED = 'room-joined',
   PLAY_SOUND = 'play-sound',
   SOUND_PLAYED = 'sound-played',
   USER_STATE_CHANGED = 'user-state-changed',
@@ -58,6 +60,11 @@ function getUserState(users: Map<string, User>): UsersState {
 
 function broadcastUserState(io: SocketIOServer, users: Map<string, User>) {
   const state = getUserState(users);
+  console.log(`${getTimestamp()} Broadcast estado dos usuários:`, {
+    totalUsers: state.connectedUsers.length,
+    roomsCount: Object.keys(state.rooms).length,
+    rooms: Object.keys(state.rooms)
+  });
   io.emit(SocketEvents.USER_STATE_CHANGED, state);
 }
 
@@ -101,6 +108,28 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       
       console.log(`${getTimestamp()} ${user.name} (${socket.id}) entrou na sala: ${roomId}`);
       
+      // Enviar confirmação para o usuário que entrou
+      socket.emit(SocketEvents.ROOM_JOINED, { roomId });
+      
+      broadcastUserState(io, users);
+    });
+
+    socket.on(SocketEvents.LEAVE_ROOM, () => {
+      const currentRoom = rooms[socket.id];
+      const user = users.get(socket.id);
+      
+      if (!currentRoom || !user) return;
+
+      socket.leave(currentRoom);
+      delete rooms[socket.id];
+      
+      // Remove roomId do usuário mas mantém o usuário conectado
+      const updatedUser: User = {
+        socketId: user.socketId,
+        name: user.name
+      };
+      users.set(socket.id, updatedUser);
+            
       broadcastUserState(io, users);
     });
 
