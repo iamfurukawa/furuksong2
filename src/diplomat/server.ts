@@ -19,6 +19,7 @@ router.put('/category/:id', Category.updateCategory);
 router.delete('/category/:id', Category.deleteCategory);
 router.get('/rooms', Room.getRooms);
 router.post('/room', Room.createRoom);
+router.put('/room/:id', Room.updateRoom);
 router.delete('/room/:id', Room.deleteRoom);
 router.get('/sounds', Sound.getAllSounds);
 router.post('/sound', upload.single('file'), Sound.createSound as any);

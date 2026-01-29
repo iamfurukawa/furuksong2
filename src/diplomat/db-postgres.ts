@@ -233,6 +233,23 @@ export async function deleteRoom(id: string): Promise<boolean> {
 }
 
 /**
+ * Atualiza uma sala pelo ID
+ */
+export async function updateRoom(id: string, room: RoomInsert): Promise<RoomModel> {
+  const updated = await db
+    .update(roomsTable)
+    .set({ name: room.name })
+    .where(eq(roomsTable.id, id))
+    .returning();
+  
+  if (updated.length === 0) {
+    throw new Error('Room not found');
+  }
+  
+  return RoomAdapter.toModel(updated[0]!);
+}
+
+/**
  * Deleta um som pelo ID
  */
 export async function deleteSound(id: string): Promise<boolean> {

@@ -16,9 +16,47 @@ export default class Room {
     res.status(200).json(roomsResponse);
   }
 
-  static async deleteRoom(req: Request, res: Response) {
+  static async deleteRoom(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
-    await RoomController.deleteRoom(id as string);
-    res.status(204).send();
+    
+    if (!id || typeof id !== 'string') {
+      res.status(400).json({ error: 'Invalid room ID' });
+      return;
+    }
+    
+    const deleted = await RoomController.deleteRoom(id);
+    
+    if (deleted) {
+      res.status(204).send();
+    } else {
+      res.status(404).json({ error: 'Room not found' });
+    }
+  }
+
+  static async updateRoom(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const { name } = req.body;
+    
+    if (!id || typeof id !== 'string') {
+      res.status(400).json({ error: 'Invalid room ID' });
+      return;
+    }
+    
+    if (!name || typeof name !== 'string') {
+      res.status(400).json({ error: 'Name is required' });
+      return;
+    }
+    
+    try {
+      const updatedRoom = await RoomController.updateRoom(id as string, { id: null, name, createdAt: Date.now() });
+      const response = RoomAdapter.toWireOut(updatedRoom);
+      res.status(200).json(response);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Room not found') {
+        res.status(404).json({ error: 'Room not found' });
+      } else {
+        res.status(500).json({ error: 'Failed to update room' });
+      }
+    }
   }
 }
