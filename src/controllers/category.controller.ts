@@ -1,4 +1,4 @@
-import { createCategory, getCategories, deleteCategory } from '../diplomat/db-postgres.js';
+import { createCategory, getCategories, deleteCategory, updateCategory } from '../diplomat/db-postgres.js';
 import type { CategoryModel } from '../models/category.js';
 import CategoryLogic from '../logic/category.js';
 
@@ -15,5 +15,11 @@ export default class CategoryController {
   static async deleteCategory(id: string): Promise<boolean> {
     CategoryLogic.isValidId(id);
     return await deleteCategory(id);
+  }
+
+  static async updateCategory(id: string, category: CategoryModel): Promise<CategoryModel> {
+    CategoryLogic.isValid(category);
+    CategoryLogic.isValidId(id);
+    return await updateCategory(id, category);
   }
 }

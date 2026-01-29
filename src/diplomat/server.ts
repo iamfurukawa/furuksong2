@@ -15,6 +15,7 @@ router.get('/health', HealthCheck.status);
 router.get('/version', Version.getCurrentVersion);
 router.get('/categories', Category.getCategories);
 router.post('/category', Category.createCategory);
+router.put('/category/:id', Category.updateCategory);
 router.delete('/category/:id', Category.deleteCategory);
 router.get('/rooms', Room.getRooms);
 router.post('/room', Room.createRoom);

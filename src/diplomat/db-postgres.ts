@@ -138,6 +138,23 @@ export async function deleteCategory(id: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * Atualiza uma categoria pelo ID
+ */
+export async function updateCategory(id: string, category: CategoryInsert): Promise<CategoryModel> {
+  const updated = await db
+    .update(categoriesTable)
+    .set({ label: category.label })
+    .where(eq(categoriesTable.id, id))
+    .returning();
+  
+  if (updated.length === 0) {
+    throw new Error('Category not found');
+  }
+  
+  return CategoryAdapter.toModel(updated[0]!);
+}
+
 // ==================== VERSION ====================
 
 /**
