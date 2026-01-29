@@ -268,4 +268,49 @@ export async function deleteSound(id: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * Atualiza um som pelo ID
+ */
+export async function updateSound(id: string, name: string, categoryIds: string[]): Promise<SoundModel> {
+  const sounds = await db.select().from(soundsTable).where(eq(soundsTable.id, id));
+  
+  if (sounds.length === 0) {
+    throw new Error('Sound not found');
+  }
+
+  // Atualiza o nome do som
+  const updated = await db
+    .update(soundsTable)
+    .set({ name })
+    .where(eq(soundsTable.id, id))
+    .returning();
+  
+  if (updated.length === 0) {
+    throw new Error('Sound not found');
+  }
+
+  // Remove todos os relacionamentos antigos com categorias
+  await db.delete(soundsToCategoriesTable).where(eq(soundsToCategoriesTable.soundId, id));
+
+  // Adiciona os novos relacionamentos com categorias
+  if (categoryIds.length > 0) {
+    await db.insert(soundsToCategoriesTable).values(
+      categoryIds.map(categoryId => ({
+        soundId: id,
+        categoryId
+      }))
+    );
+  }
+
+  // Busca o som atualizado com categorias
+  const soundWithCategories = await readAllSounds();
+  const finalSound = soundWithCategories.find(sound => sound.id === id);
+  
+  if (!finalSound) {
+    throw new Error('Sound not found after update');
+  }
+  
+  return finalSound;
+}
+
 export default db;

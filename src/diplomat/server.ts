@@ -23,6 +23,7 @@ router.put('/room/:id', Room.updateRoom);
 router.delete('/room/:id', Room.deleteRoom);
 router.get('/sounds', Sound.getAllSounds);
 router.post('/sound', upload.single('file'), Sound.createSound as any);
+router.put('/sound/:id', Sound.updateSound);
 router.delete('/sound/:id', Sound.deleteSound);
 
 export default router;

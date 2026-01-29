@@ -57,8 +57,47 @@ export async function deleteSound(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function updateSound(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const { name, categoryIds } = req.body;
+  
+  if (!id || typeof id !== 'string') {
+    res.status(400).json({ error: 'Invalid sound ID' });
+    return;
+  }
+  
+  if (!name || typeof name !== 'string') {
+    res.status(400).json({ error: 'Name is required' });
+    return;
+  }
+  
+  if (!Array.isArray(categoryIds)) {
+    res.status(400).json({ error: 'Category IDs must be an array' });
+    return;
+  }
+  
+  try {
+    const updatedSound = await SoundController.updateSound(id as string, name, categoryIds);
+    const response = SoundAdapter.toWireOut(updatedSound);
+    res.status(200).json(response);
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'Sound not found' || error.message === 'Sound not found after update') {
+        res.status(404).json({ error: 'Sound not found' });
+      } else if (error.message === 'Sound name is required') {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Failed to update sound' });
+      }
+    } else {
+      res.status(500).json({ error: 'Failed to update sound' });
+    }
+  }
+}
+
 export default {
   createSound,
   getAllSounds,
   deleteSound,
+  updateSound,
 };

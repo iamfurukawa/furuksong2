@@ -1,6 +1,6 @@
 import type { SoundRequest } from "../wire/in/sound.js";
 import type { SoundModel } from "../models/sound.js";
-import { writeSound, readAllSounds, deleteSound, incrementVersion } from "../diplomat/db-postgres.js";
+import { writeSound, readAllSounds, deleteSound, updateSound, incrementVersion } from "../diplomat/db-postgres.js";
 import SoundLogic from "../logic/sound.js";
 import { v4 as uuid } from "uuid";
 import { uploadFile, deleteFile } from "../diplomat/firebase.js";
@@ -66,6 +66,14 @@ class SoundController {
       console.error('Error deleting sound:', error);
       throw error;
     }
+  }
+
+  static async updateSound(id: string, name: string, categoryIds: string[]): Promise<SoundModel> {
+    if (!name || name.trim() === '') {
+      throw new Error('Sound name is required');
+    }
+
+    return await updateSound(id, name.trim(), categoryIds);
   }
 }
 
