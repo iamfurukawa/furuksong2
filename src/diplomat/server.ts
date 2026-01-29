@@ -1,18 +1,16 @@
-import { Router } from 'express';
-import multer from 'multer';
-
-import Version from './http_in/version.js';
 import HealthCheck from './http_in/health-check.js';
 import Category from './http_in/category.js';
 import Room from './http_in/room.js';
 import Sound from './http_in/sound.js';
+
+import { Router } from 'express';
+import multer from 'multer';
 
 const router = Router();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.get('/health', HealthCheck.status);
-router.get('/version', Version.getCurrentVersion);
 router.get('/categories', Category.getCategories);
 router.post('/category', Category.createCategory);
 router.put('/category/:id', Category.updateCategory);

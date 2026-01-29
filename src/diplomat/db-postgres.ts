@@ -1,21 +1,21 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { soundsTable, soundsToCategoriesTable, categoriesTable, versionTable, roomsTable } from "../wire/postgresql/schema.js";
+import { Pool } from 'pg';
+import { 
+  soundsTable, 
+  categoriesTable, 
+  soundsToCategoriesTable,
+  roomsTable 
+} from "../wire/postgresql/schema.js";
+import SoundAdapter from "../adapters/sound.adapter.js";
+import CategoryAdapter from "../adapters/category.adapter.js";
+import RoomAdapter from "../adapters/room.adapter.js";
+import type { SoundModel } from "../models/sound.js";
+import type { CategoryModel } from "../models/category.js";
+import type { RoomModel } from "../models/room.js";
+import type { SoundInsert, CategoryInsert } from "../models/db/sound.interface.js";
+import type { RoomInsert } from "../models/db/room.interface.js";
 import { eq, inArray } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
-import type {
-  SoundInsert,
-  CategoryInsert,
-} from '../models/db/sound.interface.js';
-import type { Version } from '../models/db/version.interface.js';
-import type { RoomInsert } from '../models/db/room.interface.js';
-import type { VersionModel } from '../models/version.js';
-import type { CategoryModel } from '../models/category.js';
-import type { RoomModel } from '../models/room.js';
-import type { SoundModel } from '../models/sound.js';
-import VersionAdapter from '../adapters/version.adapter.js';
-import CategoryAdapter from '../adapters/category.adapter.js';
-import RoomAdapter from '../adapters/room.adapter.js';
-import { Pool } from 'pg';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL!,
@@ -156,43 +156,6 @@ export async function updateCategory(id: string, category: CategoryInsert): Prom
 }
 
 // ==================== VERSION ====================
-
-/**
- * Escreve uma nova versão
- */
-async function createVersion(version: VersionModel): Promise<Version> {
-  await db.insert(versionTable).values(VersionAdapter.toModel(version));
-  return VersionAdapter.toModel(version);
-}
-
-/**
- * Lê a versão atual (retorna o ID mais recente)
- * Se não existir, cria uma versão com valor 0
- */
-export async function getVersion(): Promise<VersionModel> {
-  const versions = await db
-    .select()
-    .from(versionTable)
-    .limit(1);
-
-  if (versions.length > 0) {
-    return VersionAdapter.toModel(versions[0]!);
-  }
-
-  // Se não existir, cria uma versão com valor 0
-  const newVersion = await createVersion({ id: 0 });
-  return VersionAdapter.toModel(newVersion);
-}
-
-/**
- * Incrementa a versão existente
- */
-export async function incrementVersion(): Promise<Version> {
-  const version = await getVersion();
-  await db.delete(versionTable);
-
-  return await createVersion({ id: version.id + 1 });
-}
 
 // ==================== ROOM ====================
 

@@ -8,6 +8,13 @@
       "when": 1769603003680,
       "tag": "0000_illegal_microchip",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769725442544,
+      "tag": "0001_strange_ultragirl",
+      "breakpoints": true
     }
   ]
 }

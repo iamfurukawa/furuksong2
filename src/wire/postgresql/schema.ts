@@ -31,11 +31,6 @@ export const soundsToCategoriesTable = pgTable(
   ]
 );
 
-// Tabela de versão (controle de versão do schema)
-export const versionTable = pgTable("version", {
-  id: serial().primaryKey(), // ID numérico incrementável
-});
-
 // Tabela de salas
 export const roomsTable = pgTable("rooms", {
   id: text().primaryKey(), // UUID
