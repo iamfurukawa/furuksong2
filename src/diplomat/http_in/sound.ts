@@ -40,7 +40,25 @@ export async function getAllSounds(req: Request, res: Response): Promise<void> {
   res.status(200).json(response);
 }
 
+export async function deleteSound(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  
+  if (!id || typeof id !== 'string') {
+    res.status(400).json({ error: 'Invalid sound ID' });
+    return;
+  }
+  
+  const deleted = await SoundController.deleteSound(id);
+  
+  if (deleted) {
+    res.status(204).send();
+  } else {
+    res.status(404).json({ error: 'Sound not found' });
+  }
+}
+
 export default {
   createSound,
   getAllSounds,
+  deleteSound,
 };

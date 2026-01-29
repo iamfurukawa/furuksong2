@@ -1,6 +1,6 @@
 import type { SoundRequest } from "../wire/in/sound.js";
 import type { SoundModel } from "../models/sound.js";
-import { writeSound, readAllSounds, incrementVersion } from "../diplomat/db-postgres.js";
+import { writeSound, readAllSounds, deleteSound, incrementVersion } from "../diplomat/db-postgres.js";
 import SoundLogic from "../logic/sound.js";
 import { v4 as uuid } from "uuid";
 import { uploadFile, deleteFile } from "../diplomat/firebase.js";
@@ -38,6 +38,34 @@ class SoundController {
 
   static async getAllSounds(): Promise<SoundModel[]> {
     return await readAllSounds();
+  }
+
+  static async deleteSound(id: string): Promise<boolean> {
+    // Primeiro buscar o som para verificar se existe
+    const sounds = await readAllSounds();
+    const soundToDelete = sounds.find(sound => sound.id === id);
+    
+    if (!soundToDelete) {
+      return false;
+    }
+
+    try {
+      // Primeiro tentar deletar o arquivo do Firebase
+      try {
+        await deleteFile(id);
+      } catch (firebaseError) {
+        console.warn('Failed to delete file from Firebase:', firebaseError);
+        // Não falha a operação se o Firebase não funcionar
+      }
+      
+      // Depois deletar do banco de dados
+      const deleted = await deleteSound(id);
+      
+      return deleted;
+    } catch (error) {
+      console.error('Error deleting sound:', error);
+      throw error;
+    }
   }
 }
 

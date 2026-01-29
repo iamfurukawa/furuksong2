@@ -21,5 +21,6 @@ router.post('/room', Room.createRoom);
 router.delete('/room/:id', Room.deleteRoom);
 router.get('/sounds', Sound.getAllSounds);
 router.post('/sound', upload.single('file'), Sound.createSound as any);
+router.delete('/sound/:id', Sound.deleteSound);
 
 export default router;

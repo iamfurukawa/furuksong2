@@ -215,4 +215,23 @@ export async function deleteRoom(id: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * Deleta um som pelo ID
+ */
+export async function deleteSound(id: string): Promise<boolean> {
+  const sounds = await db.select().from(soundsTable).where(eq(soundsTable.id, id));
+  
+  if (sounds.length === 0) {
+    return false;
+  }
+
+  // Primeiro deleta os relacionamentos com categorias
+  await db.delete(soundsToCategoriesTable).where(eq(soundsToCategoriesTable.soundId, id));
+  
+  // Depois deleta o som
+  await db.delete(soundsTable).where(eq(soundsTable.id, id));
+  
+  return true;
+}
+
 export default db;
