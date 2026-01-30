@@ -14,7 +14,7 @@ import type { CategoryModel } from "../models/category.js";
 import type { RoomModel } from "../models/room.js";
 import type { SoundInsert, CategoryInsert } from "../models/db/sound.interface.js";
 import type { RoomInsert } from "../models/db/room.interface.js";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 
 const pool = new Pool({
@@ -274,6 +274,18 @@ export async function updateSound(id: string, name: string, categoryIds: string[
   }
   
   return finalSound;
+}
+
+/**
+ * Incrementa o contador de playCount de um som
+ */
+export async function incrementPlayCount(soundId: string): Promise<void> {
+  await db
+    .update(soundsTable)
+    .set({ 
+      playCount: sql`${soundsTable.playCount} + 1` 
+    })
+    .where(eq(soundsTable.id, soundId));
 }
 
 export default db;

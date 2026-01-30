@@ -1,5 +1,6 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HTTPServer } from 'http';
+import { incrementPlayCount } from './db-postgres.js';
 
 function getTimestamp(): string {
   return `[${new Date().toISOString()}]`;
@@ -143,6 +144,11 @@ export function initializeWebSocket(httpServer: HTTPServer) {
 
       const roomId = rooms[socket.id];
       if (!roomId) return;
+
+      // Incrementar o contador de playCount no banco
+      incrementPlayCount(soundId).catch(error => {
+        console.error(`${getTimestamp()} Erro ao incrementar playCount do som ${soundId}:`, error);
+      });
 
       console.log(`${getTimestamp()} Broadcasting to room ${roomId}:`, { soundId, triggeredBy: socket.id, triggeredByName: user.name });
       io.to(roomId).emit(SocketEvents.SOUND_PLAYED, {
